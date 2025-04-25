@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全息时光机</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --bg-color: #000a1f;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Orbitron', sans-serif;
+            background: var(--bg-color);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .glow-bg {
+            position: fixed;
+            width: 150vw;
+            height: 150vh;
+            background: radial-gradient(circle at 50% 50%, 
+                rgba(var(--neon-blue-rgb), 0.1),
+                rgba(var(--neon-pink-rgb), 0.1),
+                transparent 60%);
+            animation: glowMove 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes glowMove {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .container {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3rem;
+            text-shadow: 0 0 15px var(--neon-blue);
+            margin: 2rem 0;
+            letter-spacing: 3px;
+        }
+
+        .input-group {
+            margin: 3rem 0;
+            position: relative;
+        }
+
+        #yearInput {
+            padding: 1.2rem 2rem;
+            font-size: 1.5rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--neon-blue);
+            border-radius: 50px;
+            color: white;
+            width: 300px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        #yearInput:focus {
+            outline: none;
+            box-shadow: 0 0 25px var(--neon-blue);
+        }
+
+        button {
+            padding: 1rem 2.5rem;
+            margin: 1.5rem;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-pink));
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px var(--neon-pink);
+        }
+
+        #result {
+            background: linear-gradient(145deg, 
+                rgba(0, 15, 30, 0.9),
+                rgba(15, 0, 30, 0.9));
+            border: 1px solid var(--neon-blue);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem auto;
+            max-width: 800px;
+            position: relative;
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .era-card {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .era-image {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 0 25px var(--neon-blue);
+            transition: transform 0.3s ease;
+        }
+
+        .era-image:hover {
+            transform: scale(1.05);
+        }
+
+        .era-info p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .era-card {
+                grid-template-columns: 1fr;
+            }
+            
+            #yearInput {
+                width: 80%;
+            }
+        }
+
+        /* 动态粒子背景 */
+        .particles {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="glow-bg"></div>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <h1>🛸 全息年代探测器</h1>
+        
+        <div class="input-group">
+            <input type="number" id="yearInput" 
+                   placeholder="输入1990-2020间的年份"
+                   min="1990" max="2020">
+            <button onclick="startTimeTravel()">时空跃迁</button>
+        </div>
+
+        <div id="result">
+            <div class="era-card">
+                <img id="eraImage" class="era-image" alt="年代全息影像">
+                <div class="era-info">
+                    <h2 id="eraTitle"></h2>
+                    <p id="eraMusic"></p>
+                    <p id="eraMovie"></p>
+                    <p id="eraFashion"></p>
+                </div>
+            </div>
+            <button onclick="resetMachine()" class="neon-btn">重新校准</button>
+        </div>
+    </div>
+
+    <script>
+        // 生成全量年份数据
+        function generateEraData(year) {
+            const decade = Math.floor((year - 1980) / 10) * 10 + 1980;
+            const dataPool = {
+                music: {
+                    1990: ["《Black or White》Michael Jackson", "《Smells Like Teen Spirit》Nirvana"],
+                    2000: ["《Crazy in Love》Beyoncé", "《Hey Ya!》OutKast"],
+                    2010: ["《Uptown Funk》Mark Ronson", "《Shape of You》Ed Sheeran"]
+                },
+                movie: {
+                    1990: ["《泰坦尼克号》", "《阿甘正传》"],
+                    2000: ["《黑客帝国》", "《指环王》"],
+                    2010: ["《复仇者联盟》", "《盗梦空间》"]
+                },
+                fashion: {
+                    1990: "宽松牛仔裤 + 格纹衬衫",
+                    2000: "低腰裤 + 露脐装",
+                    2010: "运动休闲风 + 老爹鞋"
+                }
+            };
+
+            return {
+                title: `${year}年 - ${decade}年代风格`,
+                music: "🎧 " + dataPool.music[decade][year % 2],
+                movie: "🎞️ " + dataPool.movie[decade][year % 2],
+                fashion: "👗 " + dataPool.fashion[decade],
+                image: `https://picsum.photos/400/300?random=${year}&blur=2`
+            };
+        }
+
+        // 时空跃迁功能
+        function startTimeTravel() {
+            const year = document.getElementById('yearInput').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (year >= 1990 && year <= 2020) {
+                const era = generateEraData(year);
+                
+                document.getElementById('eraTitle').textContent = era.title;
+                document.getElementById('eraMusic').textContent = era.music;
+                document.getElementById('eraMovie').textContent = era.movie;
+                document.getElementById('eraFashion').textContent = era.fashion;
+                
+                const eraImage = document.getElementById('eraImage');
+                eraImage.src = era.image;
+                eraImage.onerror = () => eraImage.src = 'fallback-image.jpg';
+                
+                // 显示动画
+                resultDiv.style.opacity = '1';
+                resultDiv.style.transform = 'translateY(0)';
+            } else {
+                alert('请输入1990-2020之间的有效年份');
+            }
+        }
+
+        // 重置功能
+        function resetMachine() {
+            document.getElementById('yearInput').value = '';
+            document.getElementById('result').style.opacity = '0';
+            document.getElementById('result').style.transform = 'translateY(20px)';
+        }
+
+        // 动态粒子背景
+        function createParticles() {
+            const particles = document.getElementById('particles');
+            for (let i = 0; i < 100; i++) {
+                const particle = document.createElement('div');
+                particle.style = `
+                    position: absolute;
+                    background: rgba(0, 255, 255, ${Math.random()*0.5});
+                    width: ${Math.random()*3}px;
+                    height: ${Math.random()*3}px;
+                    border-radius: 50%;
+                    left: ${Math.random()*100}%;
+                    top: ${Math.random()*100}%;
+                    animation: particle ${5 + Math.random()*10}s linear infinite;
+                `;
+                particles.appendChild(particle);
+            }
+        }
+
+        // 初始化
+        window.onload = () => {
+            createParticles();
+            document.getElementById('yearInput').focus();
+        };
+    </script>
+</body>
+</html>
